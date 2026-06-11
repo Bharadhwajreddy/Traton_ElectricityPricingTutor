@@ -1,0 +1,173 @@
+import type { Country } from "../types";
+
+export const china: Country = {
+  code: "cn",
+  name: "China",
+  region: "asia",
+  status: "deep-dive",
+  lastUpdated: "2026-06-11",
+  flag: "🇨🇳",
+  summary:
+    "Since the 2021 reform, all commercial & industrial (工商业) users buy on the market — the C&I catalogue tariff is abolished. A ~1 MW / 1,000 kVA depot at 10 kV must take a two-part (两部制) tariff: a time-of-use energy charge plus a demand/capacity charge. Worked on State Grid Jiangsu's April 2026 agent-purchase schedule; other provinces vary materially.",
+
+  classification:
+    "At 10 kV the depot is in the '1-10 (20) 千伏' tariff row, class 工商业用电 (commercial & industrial). In Jiangsu the old 大工业 / 一般工商业 split was merged into one 工商业 schedule in 2023. Single-part (单一制) vs two-part (两部制) is set by contracted capacity: ≤100 kVA single-part only; 100–315 kVA optional; ≥315 kVA two-part mandatory. A ~1,000 kVA depot must take two-part — energy charge PLUS a demand charge, choosing either transformer-capacity basis (元/kVA·month) or max-demand basis (元/kW·month). Since NDRC 1439 (2021) all C&I users are in the market: they trade directly or are served by the grid's agent-purchase (代理购电) at the published monthly price — the energy price is market-determined, not a fixed catalogue value.",
+  assumptions: [
+    "Worked province = Jiangsu (江苏), State Grid agent-purchase table for April 2026 (derived from NDRC 526/2023 T&D prices + Jiangsu DRC ToU notice 426/2025). Other provinces' numbers are insufficient authoritative data; not modelled.",
+    "Depot ≈ 1,000 kVA transformer, ~2 GWh/yr, 10 kV, two-part tariff (mandatory ≥315 kVA).",
+    "Agent-purchase energy price and ToU-bundled per-kWh figures re-set every month; demand charges and T&D are stable within the third regulatory period.",
+    "A normal truck depot is NOT '高耗能' (high-energy-consuming), so it avoids the 1.5× agent-purchase penalty.",
+    "Illustrative annual estimate assumes a 30% peak / 40% flat / 30% valley energy split, capacity-basis demand, PF ≈ 0.9.",
+  ],
+  exampleDepot: {
+    contractedPowerKW: 1000,
+    annualEnergyKWh: 2_000_000,
+    voltageLevel: "10 kV, two-part (两部制), 工商业",
+    utilisationHours: 2000,
+  },
+
+  components: [
+    {
+      name: "代理购电价格 (agent-purchase energy price)",
+      category: "energy",
+      basis: "NDRC 1439 (2021); grid agent-purchase service",
+      calculation: "0.3715 元/kWh (Apr 2026; = monthly avg purchase 0.3746 − historical deviation 0.0031). Direct traders use their own contract price instead.",
+      variesByRegion: "Recomputed monthly; varies every province/month",
+      modelled: true,
+      refIds: [1, 3],
+    },
+    {
+      name: "上网环节线损费用 (grid-connection line-loss charge)",
+      category: "grid-energy",
+      basis: "NDRC 526; grid agent-purchase rules",
+      calculation: "0.0123 元/kWh (= purchase price × loss rate ÷ (1−loss rate)).",
+      variesByRegion: "Province loss rate differs",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "电度输配电价 (volumetric T&D price)",
+      category: "grid-energy",
+      basis: "NDRC 526 (2023), third regulatory period",
+      calculation: "0.1357 元/kWh @ 1-10 kV (0.1107 @35 kV; 0.0857 @110 kV; 0.0597 @220 kV).",
+      variesByRegion: "Set per province by NDRC 526",
+      modelled: true,
+      refIds: [2, 3],
+    },
+    {
+      name: "容量电价 (capacity demand charge, by transformer kVA)",
+      category: "grid-power",
+      basis: "NDRC 526; two-part tariff",
+      calculation: "32 元/千伏安·月 @ 1-10 kV → 1,000 × 32 × 12 = 384,000 元/yr. (30 @35 kV; 28 @110 kV; 26 @220 kV.)",
+      variesByRegion: "Province-specific",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "需量电价 (max-demand charge, by metered kW)",
+      category: "grid-power",
+      basis: "NDRC 526; two-part tariff (alternative to capacity basis)",
+      calculation: "51.2 元/千瓦·月 @ 1-10 kV. If monthly kWh ≥ 260 per kVA, billed at 90% of standard. User picks capacity- or demand-basis.",
+      variesByRegion: "Province-specific",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "系统运行费用 (system operation cost)",
+      category: "surcharge",
+      basis: "NDRC market rules; provincial settlement",
+      calculation: "0.0688 元/kWh (pumped-storage capacity, gas-gen capacity, cross-subsidy, coal capacity charge 0.0342, new-energy settlement 0.0230, ancillary services, etc.).",
+      variesByRegion: "Province-specific composition",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "政府性基金及附加 (government funds & surcharges)",
+      category: "levy",
+      basis: "National government funds",
+      calculation: "0.0294 元/kWh total = 国家重大水利工程建设基金 0.0042 + 大中型水库移民后期扶持资金 0.0062 + 可再生能源电价附加 0.0190 (renewable surcharge still levied at 1.9 分/kWh in Jiangsu).",
+      variesByRegion: "Yuan amounts vary modestly by province",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "分时电价 峰/平/谷 (time-of-use peak/flat/valley)",
+      category: "energy",
+      basis: "Jiangsu DRC ToU notice 苏发改价格发〔2025〕426号",
+      calculation: "Two-part: peak +80%, valley −65% of the purchase-price base. Published 10 kV two-part rates: 峰 0.9149, 平 0.6177, 谷 0.3762 元/kWh (these bundle energy + line-loss + T&D + system cost + funds).",
+      variesByRegion: "Windows & float ratios vary widely",
+      modelled: true,
+      refIds: [4],
+    },
+    {
+      name: "尖峰/深谷 (critical-peak & deep-valley)",
+      category: "energy",
+      basis: "Jiangsu DRC; ≥315 kVA industrial only",
+      calculation: "Critical peak +20% above peak; deep valley −20% below valley (specific summer/winter windows). Applies to this depot (≥315 kVA).",
+      variesByRegion: "Few provinces apply 尖峰",
+      modelled: true,
+      refIds: [4],
+    },
+    {
+      name: "增值税 / VAT (13%)",
+      category: "tax",
+      basis: "National VAT law",
+      calculation: "The published 元/kWh figures already include 13% VAT.",
+      variesByRegion: "National",
+      modelled: true,
+      refIds: [3],
+    },
+    {
+      name: "力调电费 (power-factor adjustment)",
+      category: "surcharge",
+      basis: "力率调整电费办法; Jiangsu standard PF 0.9",
+      calculation: "Above PF 0.9 → bill reduction; below → surcharge. Billed per-customer on each account.",
+      variesByRegion: "Standard varies (0.9/0.85/0.8)",
+      modelled: false,
+      refIds: [3],
+    },
+  ],
+
+  formulas: [
+    { label: "Energy (volumetric, ToU)", symbolic: "Energy_cost = E_peak×0.9149 + E_flat×0.6177 + E_valley×0.3762", note: "Published 峰/平/谷 prices already bundle energy + line-loss + T&D + system cost + funds (+ 尖峰/深谷 if metered separately)." },
+    { label: "Built-up price per period", symbolic: "price(period) = p_base×(1+m_period) + k_loss + t_td + c_sys + g", note: "p_base=0.3715, k_loss=0.0123, t_td=0.1357, c_sys=0.0688, g=0.0294; flat ref = 0.6177. ToU multipliers: peak +0.80, valley −0.65." },
+    { label: "Demand — capacity basis", symbolic: "Demand_cost = S_kVA × 32 × 12 = 1000 × 32 × 12 = 384,000 元/yr" },
+    { label: "Demand — max-demand basis", symbolic: "Demand_cost = P_max × 51.2 × 12  (×0.9 in months where kWh/kVA ≥ 260)", note: "User chooses ONE basis." },
+    { label: "Power-factor adjustment", symbolic: "PF_cost = ±β × (Energy_cost + Demand_cost)", note: "β from 力率调整 table vs PF 0.9; negative = reward." },
+  ],
+  totalFormula: {
+    label: "Total annual cost",
+    symbolic: "Total = Energy_cost + Demand_cost + PF_cost   (VAT already included)",
+    note: "Illustrative (2 GWh, 30/40/30 split, capacity basis, PF≈0.9): Energy ≈ 1,268,820 元 + Demand 384,000 元 ≈ 1.65 M 元/yr (≈ 0.826 元/kWh all-in). Jiangsu only; prices re-set monthly.",
+  },
+
+  v2g:
+    "Distributed generation / 余电上网: a C&I site with on-site PV or storage that back-feeds is governed by distributed-generation grid-connection and new-energy market-pricing rules; in Jiangsu new-energy on-grid pricing moved to market settlement (2025). A single nationally-uniform back-feed buy-back rate for an industrial user is insufficient authoritative data; not modelled.\n\nV2G (车网互动): pilot-stage. NDRC/NEA 发改办能源〔2024〕718号 launched scale pilots; 发改办能源〔2025〕241号 named the first batch — 9 cities (Shanghai, Changzhou, Hefei, Huaibei, Guangzhou, Shenzhen, Haikou, Chongqing, Kunming) and 30 projects. Pilot rules: ≥60% annual charging in valley (≥80% for private chargers); V2G projects need ≥500 kW discharge power and ≥100,000 kWh/yr discharge.\n\nV2G pricing: no national unified feed-in tariff exists. Doc 718 only directs authorities to 'explore' a discharge-to-grid pricing mechanism and aggregator business models; compensation is left to local pilots / market mechanisms (e.g. a ~3.5 元/kWh discharge subsidy reported for Guangzhou is city-pilot specific, not a national schedule). National V2G tariff rules are largely pilot-stage; authoritative national pricing is insufficient and not modelled.",
+
+  history: [
+    "2021 (NDRC 1439): all C&I users moved into the electricity market; C&I catalogue sales tariff abolished.",
+    "2022 (NDRC 1047): agent-purchase (代理购电) service rules for users not trading directly.",
+    "2023 (NDRC 526 + 苏发改价格发 552/2023): third-regulatory-period T&D prices; Jiangsu merged 大工业 and 一般工商业 into one 工商业 class.",
+    "2024 (发改办能源 718): scale V2G (车网互动) pilots launched.",
+    "1 Jun 2025 (苏发改价格发 426): revised Jiangsu ToU structure (peak +80% / valley −65% two-part; seasonal windows).",
+    "2025 (发改办能源 241): first batch of 9 V2G pilot cities / 30 projects announced.",
+  ],
+
+  gaps: [
+    "Only Jiangsu modelled; voltage bands, demand rates, ToU windows and surcharges differ by province — other provinces' catalogue numbers are insufficient authoritative data; not modelled.",
+    "Agent-purchase energy price and ToU-bundled per-kWh figures re-set every month (Apr 2026 values used).",
+    "农网还贷资金 and province-specific surcharge yuan values outside Jiangsu not modelled.",
+    "National V2G feed-in pricing is pilot-stage; no authoritative national tariff.",
+    "NDRC 1047 (agent-purchase basis) cited within the Jiangsu table but not independently retrieved.",
+  ],
+
+  references: [
+    { id: 1, title: "关于进一步深化燃煤发电上网电价市场化改革的通知 (发改价格〔2021〕1439号)", org: "NDRC", year: "2021", url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202110/t20211012_1299461.html", accessed: "2026-06" },
+    { id: 2, title: "关于第三监管周期省级电网输配电价及有关事项的通知 (发改价格〔2023〕526号)", org: "NDRC", year: "2023", url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202305/t20230515_1355747.html", accessed: "2026-06" },
+    { id: 3, title: "国网江苏省电力有限公司关于2026年4月代理购电工商业用户电价的公告 (附表1/附表2)", org: "State Grid Jiangsu (国网江苏)", year: "2026", url: "http://www.js.sgcc.com.cn/", accessed: "2026-06" },
+    { id: 4, title: "省发展改革委关于优化工商业分时电价结构…的通知 (苏发改价格发〔2025〕426号; eff. 2025-06-01)", org: "Jiangsu Development & Reform Commission", year: "2025", url: "https://fzggw.jiangsu.gov.cn/art/2025/4/30/art_284_11557001.html", accessed: "2026-06" },
+    { id: 5, title: "苏发改价格发〔2023〕552号 (100/315 kVA single-vs-two-part thresholds; 260 kWh/kVA → 90% demand-price)", org: "Jiangsu DRC (via Nanjing DRC)", year: "2023", url: "https://fgw.nanjing.gov.cn/njsfzhggwyh/202305/t20230530_3923874.html", accessed: "2026-06" },
+    { id: 6, title: "关于推动车网互动规模化应用试点工作的通知 (发改办能源〔2024〕718号)", org: "NDRC / NEA et al.", year: "2024", url: "https://www.gov.cn/zhengce/zhengceku/202409/content_6973459.htm", accessed: "2026-06" },
+    { id: 7, title: "关于公布首批车网互动规模化应用试点的通知 (发改办能源〔2025〕241号; 9 cities, 30 projects)", org: "NDRC / NEA et al.", year: "2025", url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202504/t20250402_1396958.html", accessed: "2026-06" },
+  ],
+};
