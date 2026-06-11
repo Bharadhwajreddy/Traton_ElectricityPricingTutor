@@ -8,7 +8,7 @@ export const sweden: Country = {
   lastUpdated: "2026-06-11",
   flag: "🇸🇪",
   summary:
-    "A ~1 MW depot is a high-voltage power-subscription (effektabonnemang) customer. The bill splits into competitive energy (Nord Pool spot in its SE1–SE4 zone), a regulated DSO grid charge (fixed + effektavgift + seasonal överföring), and tax (energiskatt 36.0 öre/kWh + 25% recoverable VAT).",
+    "A truck depot of about 1 MW is far too big for a simple household-style connection, so it buys electricity in three separate streams. (1) Energy — the electricity itself, bought at the live wholesale market price, which in Sweden differs by region (four price zones, SE1 in the north to SE4 in the south). (2) Grid — a regulated fee paid to the local wires company (the DSO, Distribution System Operator) for delivering the power: a fixed monthly fee, a “power charge” based on your highest kW draw (effektavgift), and a per-kWh delivery charge that is higher on winter weekdays (överföring). (3) Tax — an energy tax (energiskatt) of 36.0 öre per kWh (öre = 1/100 of a Swedish krona) plus 25% VAT, which a VAT-registered business claims back so it is not a real cost.",
 
   classification:
     "At ~1 MW a Swedish connection is too large for a fuse-based (säkringsabonnemang) low-voltage contract; it sits on a power-based subscription (effektabonnemang) at högspänning (high voltage, typically 10–20 kV local distribution). In Vattenfall Eldistribution's catalogue this is the N4 (högspänning) class. Sweden has four bidding zones SE1 (north) – SE4 (south); day-ahead spot prices differ materially by zone (south typically dearer), and since October 2025 the market clears in 15-minute intervals. The depot's energy cost depends on which SE-zone it sits in.",

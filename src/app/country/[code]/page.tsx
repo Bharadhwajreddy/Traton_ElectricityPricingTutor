@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ComponentTable } from "@/components/ComponentTable";
 import { FormulaBlock } from "@/components/FormulaBlock";
 import { ReferenceList } from "@/components/ReferenceList";
+import { Glossary } from "@/components/Glossary";
 
 export function generateStaticParams() {
   return COUNTRIES.map((c) => ({ code: c.code }));
@@ -60,6 +61,8 @@ export default function CountryPage({ params }: { params: { code: string } }) {
         </div>
       ) : (
         <div className="mt-8 space-y-10">
+          <Glossary defaultOpen />
+
           {country.classification && (
             <Section id="classification" title="A · Customer classification">
               <p className="text-slate-600">{country.classification}</p>

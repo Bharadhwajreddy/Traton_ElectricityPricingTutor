@@ -1,6 +1,7 @@
 import { COUNTRIES, countriesByStatus } from "@/data/countries";
 import { CountryCard } from "@/components/CountryCard";
 import { STANDARD_DEPOT } from "@/data/depot";
+import { Glossary } from "@/components/Glossary";
 
 export default function Home() {
   const ordered = countriesByStatus();
@@ -21,9 +22,15 @@ export default function Home() {
             How is a truck depot charged for electricity?
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-600">
-            A country-by-country breakdown of the exact tariff components, formulas and official
-            references that determine a grid-connected truck depot&apos;s electricity bill across
-            Europe and China.
+            A country-by-country breakdown of every charge that adds up to a truck depot&apos;s
+            electricity bill — the price of the electricity itself, the fees for delivering it over
+            the wires, and the taxes and surcharges on top — across Europe and China, each item with
+            its formula and official source.
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
+            New to this? A <em>tariff</em> is simply the rate plan for electricity, and each{" "}
+            <em>component</em> is one line item on the bill. Every country page opens with a
+            plain-English summary and a “key terms” panel.
           </p>
 
           <div className="mt-6 grid max-w-2xl grid-cols-3 gap-3 text-sm">
@@ -41,6 +48,10 @@ export default function Home() {
               {STANDARD_DEPOT.utilisationHours.toLocaleString()} full-load hours/year. Applied
               consistently across countries unless a documented deviation is noted.
             </div>
+          </div>
+
+          <div className="mt-6 sm:max-w-2xl">
+            <Glossary />
           </div>
         </div>
       </section>
