@@ -17,6 +17,9 @@ export function Nav() {
           <Link href="/" className="hover:text-brand-600">
             Countries
           </Link>
+          <Link href="/future" className="hover:text-brand-600">
+            Future in Europe
+          </Link>
           <Link href="/methodology" className="hover:text-brand-600">
             Methodology
           </Link>

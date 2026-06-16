@@ -2,12 +2,14 @@ import type { Country } from "../types";
 import { germany } from "./germany";
 import { sweden } from "./sweden";
 import { china } from "./china";
+import { denmark } from "./denmark";
 import { STUB_COUNTRIES } from "./_stubs";
 
 // Priority deep-dive countries first, then scaffolded stubs (alphabetical).
 export const COUNTRIES: Country[] = [
   germany,
   sweden,
+  denmark,
   china,
   ...STUB_COUNTRIES.sort((a, b) => a.name.localeCompare(b.name)),
 ];

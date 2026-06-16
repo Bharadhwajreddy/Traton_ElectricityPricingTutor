@@ -19,6 +19,20 @@ export const china: Country = {
     "A normal truck depot is NOT '高耗能' (high-energy-consuming), so it avoids the 1.5× agent-purchase penalty.",
     "Illustrative annual estimate assumes a 30% peak / 40% flat / 30% valley energy split, capacity-basis demand, PF ≈ 0.9.",
   ],
+  operators: {
+    tso: [
+      { name: "State Grid (国家电网)", note: "~88% of China — north, east, central, NW" },
+      { name: "China Southern Power Grid (南方电网)", note: "5 southern provinces (Guangdong, Guangxi, Yunnan, Guizhou, Hainan)" },
+    ],
+    tsoNote:
+      "China has no European-style independent TSO/DSO split. Two giant state grids own both transmission AND distribution; their provincial subsidiaries (e.g. State Grid Jiangsu) act as the local 'DSO'. There is no SDAC/NEMO equivalent.",
+    dso: "Provincial grid companies (subsidiaries of the two grids) are the de-facto DSOs — they own the local wires and bill your depot under the provincial schedule.",
+    dsoExamples: ["State Grid Jiangsu", "State Grid Shanghai", "Guangdong Power Grid", "State Grid Zhejiang"],
+    marketOperator:
+      "Wholesale trading clears through the Beijing Power Exchange (北京电力交易中心) and Guangzhou Power Exchange (广州电力交易中心) plus provincial trading centres; provinces are rolling out spot markets (现货市场). Users who don't trade directly are served by grid 'agent purchase' (代理购电) at a monthly republished price.",
+    priceZones: "Province-by-province markets (no single coupled zone); prices and rules differ markedly between provinces.",
+    refIds: [1, 8],
+  },
   exampleDepot: {
     contractedPowerKW: 1000,
     annualEnergyKWh: 2_000_000,
@@ -128,6 +142,8 @@ export const china: Country = {
     },
   ],
 
+  formulaIntro:
+    "A two-part tariff means two bills in one. (1) An energy charge per kWh — but the per-kWh price changes with the time of day: dear at peak (峰), medium at flat (平), cheap in the overnight valley (谷). The published峰/平/谷 prices already bundle in the grid-delivery fee, line losses, system costs and government funds, so multiplying each block of energy by its time-of-day price gives the whole volumetric bill. (2) A separate capacity/demand charge per month — either by the size of your transformer (容量, 元/kVA) or by your highest measured power (需量, 元/kW); you pick whichever is cheaper. VAT (13%) is already inside the listed prices. Because the valley price is roughly a third of the peak price, shifting charging to the overnight valley is the biggest cost lever here.",
   formulas: [
     { label: "Energy (volumetric, ToU)", symbolic: "Energy_cost = E_peak×0.9149 + E_flat×0.6177 + E_valley×0.3762", note: "Published 峰/平/谷 prices already bundle energy + line-loss + T&D + system cost + funds (+ 尖峰/深谷 if metered separately)." },
     { label: "Built-up price per period", symbolic: "price(period) = p_base×(1+m_period) + k_loss + t_td + c_sys + g", note: "p_base=0.3715, k_loss=0.0123, t_td=0.1357, c_sys=0.0688, g=0.0294; flat ref = 0.6177. ToU multipliers: peak +0.80, valley −0.65." },
@@ -141,16 +157,26 @@ export const china: Country = {
     note: "Illustrative (2 GWh, 30/40/30 split, capacity basis, PF≈0.9): Energy ≈ 1,268,820 元 + Demand 384,000 元 ≈ 1.65 M 元/yr (≈ 0.826 元/kWh all-in). Jiangsu only; prices re-set monthly.",
   },
 
+  costStack: {
+    currency: "CNY",
+    basis: "Jiangsu, Apr-2026, capacity basis, 30/40/30 peak/flat/valley split → ≈ 1.65M 元/yr.",
+    slices: [
+      { label: "Energy (ToU peak/flat/valley, bundled)", category: "energy", amount: 1268820, note: "incl. T&D, line-loss, system cost, funds" },
+      { label: "Capacity charge (基本电费)", category: "grid-power", amount: 384000, note: "1,000 kVA × 32 元 × 12" },
+    ],
+  },
   v2g:
-    "Distributed generation / 余电上网: a C&I site with on-site PV or storage that back-feeds is governed by distributed-generation grid-connection and new-energy market-pricing rules; in Jiangsu new-energy on-grid pricing moved to market settlement (2025). A single nationally-uniform back-feed buy-back rate for an industrial user is insufficient authoritative data; not modelled.\n\nV2G (车网互动): pilot-stage. NDRC/NEA 发改办能源〔2024〕718号 launched scale pilots; 发改办能源〔2025〕241号 named the first batch — 9 cities (Shanghai, Changzhou, Hefei, Huaibei, Guangzhou, Shenzhen, Haikou, Chongqing, Kunming) and 30 projects. Pilot rules: ≥60% annual charging in valley (≥80% for private chargers); V2G projects need ≥500 kW discharge power and ≥100,000 kWh/yr discharge.\n\nV2G pricing: no national unified feed-in tariff exists. Doc 718 only directs authorities to 'explore' a discharge-to-grid pricing mechanism and aggregator business models; compensation is left to local pilots / market mechanisms (e.g. a ~3.5 元/kWh discharge subsidy reported for Guangzhou is city-pilot specific, not a national schedule). National V2G tariff rules are largely pilot-stage; authoritative national pricing is insufficient and not modelled.",
+    "Distributed generation / 余电上网: a C&I site with on-site PV or storage that back-feeds is governed by distributed-generation grid-connection and new-energy market-pricing rules. The big 2025 change is NDRC/NEA Document 136 (发改价格〔2025〕136号, 9 Feb 2025): new-energy on-grid electricity 'in principle fully enters the market', with prices set by trading rather than a fixed feed-in tariff. Projects are split at 1 June 2025 (existing vs new); new projects get a 'mechanism price' set by provincial competitive bidding. So there is no single nationally-uniform back-feed buy-back rate for an industrial exporter — it is market-determined per province: insufficient authoritative single value; not modelled.\n\nV2G (车网互动): pilot-stage. NDRC/NEA 发改办能源〔2024〕718号 launched scale pilots; 发改办能源〔2025〕241号 named the first batch — 9 cities (Shanghai, Changzhou, Hefei, Huaibei, Guangzhou, Shenzhen, Haikou, Chongqing, Kunming) and 30 projects. Pilot rules: ≥60% annual charging in valley (≥80% for private chargers); V2G projects need ≥500 kW discharge power and ≥100,000 kWh/yr discharge.\n\nV2G pricing: no national unified feed-in tariff exists. Doc 718 only directs authorities to 'explore' a discharge-to-grid pricing mechanism and aggregator business models; compensation is left to local pilots / market mechanisms (e.g. a ~3.5 元/kWh discharge subsidy reported for Guangzhou is city-pilot specific, not a national schedule). National V2G tariff rules are largely pilot-stage; authoritative national pricing is insufficient and not modelled.",
 
   history: [
     "2021 (NDRC 1439): all C&I users moved into the electricity market; C&I catalogue sales tariff abolished.",
     "2022 (NDRC 1047): agent-purchase (代理购电) service rules for users not trading directly.",
     "2023 (NDRC 526 + 苏发改价格发 552/2023): third-regulatory-period T&D prices; Jiangsu merged 大工业 and 一般工商业 into one 工商业 class.",
     "2024 (发改办能源 718): scale V2G (车网互动) pilots launched.",
+    "9 Feb 2025 (NDRC/NEA 136号文): landmark reform — new-energy on-grid prices fully marketised; mechanism prices via provincial bidding; existing/new split at 1 Jun 2025.",
     "1 Jun 2025 (苏发改价格发 426): revised Jiangsu ToU structure (peak +80% / valley −65% two-part; seasonal windows).",
     "2025 (发改办能源 241): first batch of 9 V2G pilot cities / 30 projects announced.",
+    "Coal capacity price (煤电容量电价, NDRC/NEA 1256/2023) in force since 2024 — a two-part mechanism for coal plants that feeds into the 系统运行费 you pay.",
   ],
 
   gaps: [
@@ -169,5 +195,6 @@ export const china: Country = {
     { id: 5, title: "苏发改价格发〔2023〕552号 (100/315 kVA single-vs-two-part thresholds; 260 kWh/kVA → 90% demand-price)", org: "Jiangsu DRC (via Nanjing DRC)", year: "2023", url: "https://fgw.nanjing.gov.cn/njsfzhggwyh/202305/t20230530_3923874.html", accessed: "2026-06" },
     { id: 6, title: "关于推动车网互动规模化应用试点工作的通知 (发改办能源〔2024〕718号)", org: "NDRC / NEA et al.", year: "2024", url: "https://www.gov.cn/zhengce/zhengceku/202409/content_6973459.htm", accessed: "2026-06" },
     { id: 7, title: "关于公布首批车网互动规模化应用试点的通知 (发改办能源〔2025〕241号; 9 cities, 30 projects)", org: "NDRC / NEA et al.", year: "2025", url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202504/t20250402_1396958.html", accessed: "2026-06" },
+    { id: 8, title: "关于深化新能源上网电价市场化改革促进新能源高质量发展的通知 (发改价格〔2025〕136号; new-energy prices fully marketised, eff. 1 Jun 2025)", org: "NDRC / NEA", year: "2025", url: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202502/t20250209_1396066.html", accessed: "2026-06" },
   ],
 };

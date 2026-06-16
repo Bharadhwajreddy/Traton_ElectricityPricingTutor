@@ -18,6 +18,22 @@ export const germany: Country = {
     "Stromsteuer §9b reduction assumed NOT applicable: a truck depot is logistics, not 'produzierendes Gewerbe' by default — modelled at the full 2.05 ct/kWh. Verify the WZ-2008 classification.",
     "Energy price and DSO Netzentgelte (LP, AP) are market-/region-specific — only methodology and the <2,500 h regime are fixed; no single euro figure asserted.",
   ],
+  operators: {
+    tso: [
+      { name: "50Hertz", note: "North & East (former East Germany, Hamburg)" },
+      { name: "Amprion", note: "West (NRW down to the southwest)" },
+      { name: "TenneT DE", note: "North–South corridor (Lower Saxony to Bavaria)" },
+      { name: "TransnetBW", note: "Baden-Württemberg (southwest)" },
+    ],
+    tsoNote:
+      "Germany's transmission grid is split into four control zones, one per TSO. They jointly run the grid-levy clearing platform Netztransparenz.de. Together with Luxembourg they form a single DE-LU day-ahead bidding zone.",
+    dso: "≈ 870 distribution system operators (by far the most in Europe) — from large regional networks to small municipal Stadtwerke. Your depot's grid charges depend on whichever DSO owns the local wires.",
+    dsoExamples: ["Westnetz", "Bayernwerk Netz", "Netze BW", "Stromnetz Berlin", "Stromnetz Hamburg", "Avacon"],
+    marketOperator:
+      "Day-ahead clearing is done by NEMOs — EPEX SPOT, Nord Pool and EXAA — inside European Single Day-Ahead Coupling (SDAC), which clears all coupled zones simultaneously with the EUPHEMIA algorithm.",
+    priceZones: "Single DE-LU bidding zone (Germany + Luxembourg).",
+    refIds: [16, 17],
+  },
   exampleDepot: {
     contractedPowerKW: 1000,
     annualEnergyKWh: 2_000_000,
@@ -134,6 +150,8 @@ export const germany: Country = {
     },
   ],
 
+  formulaIntro:
+    "Read the bill as a stack: you pay (1) for the electricity itself, (2) to have it delivered over the wires, and (3) taxes, levies and surcharges on top. The grid charge has two parts — a per-kW 'power' part tied to your annual peak, and a per-kWh part tied to how much you actually use. Because this depot runs only ~2,000 full-load hours (E ÷ P_max = 2,000,000 ÷ 1,000), it sits in the '<2,500 hours' grid-price band, where the per-kW power part is high — so cutting the peak (P_max) is the single biggest lever on the grid bill. The lines below are each component as its own formula; add them up for the net annual cost, then × 1.19 for VAT (which a business reclaims).",
   formulas: [
     { label: "Energy", symbolic: "C_energy = E × p_energy", note: "Market price; not modelled to a figure." },
     { label: "Grid (capacity + energy)", symbolic: "C_grid = P_max × LP(regime) + E × AP(regime)", note: "regime = <2500h for this depot (t_B = 2000 h). LP/AP are DSO-specific." },
@@ -152,6 +170,19 @@ export const germany: Country = {
     note: "VAT (19%) recoverable as Vorsteuer. Nationally-fixed regulated parts ≈ €41k (tax) + €16.1k (§19) + €9.4k+ (offshore) + €4.5k+ (KWKG) + €2.2k (concession); energy + grid + metering are market/DSO-specific.",
   },
 
+  costStack: {
+    currency: "EUR",
+    basis: "Indicative annual breakdown — energy & grid at representative rates (market/DSO-specific); levies & tax are exact 2026 values.",
+    slices: [
+      { label: "Energy (electricity itself)", category: "energy", amount: 240000, note: "illustrative ~€0.12/kWh; market" },
+      { label: "Grid – Netzentgelte (power + energy)", category: "grid-power", amount: 75000, note: "illustrative; DSO-specific" },
+      { label: "Electricity tax (Stromsteuer)", category: "tax", amount: 41000 },
+      { label: "§19 StromNEV surcharge", category: "surcharge", amount: 16090 },
+      { label: "Offshore surcharge", category: "surcharge", amount: 9410 },
+      { label: "KWKG surcharge", category: "surcharge", amount: 4460 },
+      { label: "Concession levy", category: "concession", amount: 2200 },
+    ],
+  },
   v2g:
     "Pure-consumption depot: back-feeding is not a normal feature; grid fees apply to drawn (not fed-in) energy, and any export falls under standard EnWG/EEG/StromStG rules.\n\nStorage / bidirectional charging (V2G) — the relevant regime is §118 Abs. 6 EnWG: electricity drawn to charge storage and later fed back into the same grid is exempt from grid fees (avoiding double Netzentgelte). The 2025 EnWG amendment extends this to mixed-use storage (only the re-fed-in share). Via the new reference from §118 Abs. 6 S. 3 to §21 EnFG, bidirectional charging points are treated as storage and qualify for the grid-fee privilege — and sit in the §21 EnFG group with a 0.000 ct/kWh netzentgelt-based surcharge, making V2G economically viable from 2026. BNetzA 'MiSpeL' rules, effective 1 April 2026, simplify V2G technically — notably no second meter is required.\n\nEEG feed-in remuneration for any co-located PV/generator follows the EEG. Export remuneration beyond the storage/V2G privilege is case-specific — insufficient authoritative data; not modelled.",
 
@@ -186,5 +217,7 @@ export const germany: Country = {
     { id: 13, title: "Messstellenbetriebsgesetz (MsbG) — Preisobergrenzen (§32) / iMSys for RLM", org: "gesetze-im-internet.de", year: "2026", url: "https://www.gesetze-im-internet.de/messbg/BJNR203410016.html", accessed: "2026-06" },
     { id: 14, title: "Messeinrichtungen / Intelligente Messsysteme (metering, price caps)", org: "Bundesnetzagentur", year: "2026", url: "https://www.bundesnetzagentur.de/DE/Vportal/Energie/Metering/start.html", accessed: "2026-06" },
     { id: 15, title: "§118 Abs. 6 EnWG — Netzentgeltbefreiung Stromspeicher / bidirektionales Laden (V2G)", org: "Stiftung Umweltenergierecht", year: "2025", url: "https://stiftung-umweltenergierecht.de/wp-content/uploads/2025/12/Neue-Netzentgelt-Privilegien-fuer-Speicheranlagen-und-Ladepunkte.pdf", accessed: "2026-06" },
+    { id: 16, title: "ENTSO-E member TSOs (50Hertz, Amprion, TenneT, TransnetBW)", org: "ENTSO-E", year: "2026", url: "https://www.entsoe.eu/about/inside-entsoe/members/", accessed: "2026-06" },
+    { id: 17, title: "NEMOs & Single Day-Ahead Coupling (EPEX SPOT, Nord Pool, EXAA; EUPHEMIA)", org: "NEMO Committee", year: "2026", url: "https://www.nemo-committee.eu/sdac", accessed: "2026-06" },
   ],
 };

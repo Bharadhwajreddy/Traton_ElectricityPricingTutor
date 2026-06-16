@@ -29,10 +29,11 @@ THIN = Border(*[Side(style="thin", color="E2E8F0")] * 4)
 MASTER = [
     ("Germany", "DE", "Europe", "deep-dive", "2026-06-11"),
     ("Sweden", "SE", "Europe", "deep-dive", "2026-06-11"),
+    ("Denmark", "DK", "Europe", "deep-dive", "2026-06-15"),
     ("China", "CN", "Asia", "deep-dive", "2026-06-11"),
 ]
 STUBS = ["France", "Netherlands", "Italy", "Spain", "United Kingdom", "Poland",
-         "Belgium", "Austria", "Switzerland", "Denmark", "Norway", "Finland",
+         "Belgium", "Austria", "Switzerland", "Norway", "Finland",
          "Portugal", "Ireland", "Czechia", "Slovakia", "Hungary", "Romania",
          "Bulgaria", "Greece", "Croatia", "Slovenia", "Estonia", "Latvia",
          "Lithuania", "Luxembourg", "Iceland", "Serbia", "Ukraine", "Malta",
@@ -124,6 +125,28 @@ COUNTRIES = {
         ],
         "v2g": "V2G (车网互动) pilot-stage: 718/2024 + 241/2025 (9 cities, 30 projects). No national feed-in "
                "tariff; compensation via local pilots/aggregators/market. Not modelled.",
+    },
+    "Denmark": {
+        "classification": "MV/HV (10-60 kV) business (C/B customer). Energy = Nord Pool spot, zone DK1 "
+                          "(west) or DK2 (east). TSO Energinet; DSO time-of-day tariff (Radius Tarifmodel 3.0).",
+        "components": [
+            ("Spotpris (energy)", "energy", "Nord Pool day-ahead DK1/DK2", "E x p_spot (zone-dependent)", "Supplier & zone"),
+            ("Energinet systemtarif", "grid-energy", "Energinet tariff reg.", "0.072 DKK/kWh (2026)", "National"),
+            ("Energinet nettarif", "grid-energy", "Energinet tariff reg.", "0.043 DKK/kWh (2026); +187 kr sub", "National"),
+            ("DSO nettarif (Tarifmodel 3.0)", "grid-energy", "DSO; Forsyningstilsynet", "ToU lav/hoj/spids; winter higher", "Each DSO"),
+            ("Elafgift (electricity tax)", "tax", "Lov om afgift af elektricitet", "~0.008 DKK/kWh (2026 EU min); biz refund", "National"),
+            ("PSO-tarif", "levy", "Former Elforsyningsloven", "0 (abolished end-2022)", "N/A"),
+            ("Moms (VAT)", "tax", "Momsloven", "25% (recoverable)", "National"),
+        ],
+        "formulas": [
+            ("Energy", "C_energy = E * p_spot (DK1/DK2)"),
+            ("Energinet", "C_energinet = E*0.115 + 187 = 230000 + sub"),
+            ("DSO grid", "C_dso = sum_period(E_period * rate_period)"),
+            ("Electricity tax", "C_elafgift = E*0.008 ~ 16000 (biz refund)"),
+            ("TOTAL", "C_preVAT = energy+energinet+dso+elafgift; x1.25 VAT (recoverable)"),
+        ],
+        "v2g": "Export => producer/feed-in under Energinet+DSO; sold at ~spot; Energinet flexibility/balancing "
+               "markets. Early V2G testbed (Parker) but no dedicated V2G tariff as of mid-2026; not modelled.",
     },
 }
 

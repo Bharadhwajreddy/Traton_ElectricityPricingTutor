@@ -18,6 +18,17 @@ export const sweden: Country = {
     "Energy (spot) cost is zone- and contract-dependent and is NOT modelled as a single authoritative figure.",
     "An energy split of 30% höglasttid / 70% låglasttid is assumed only to illustrate the seasonal grid formula.",
   ],
+  operators: {
+    tso: [{ name: "Svenska kraftnät", note: "National transmission grid + system operator for all of Sweden" }],
+    tsoNote:
+      "Sweden has a single national TSO, but the country is divided into four day-ahead price zones (SE1 north → SE4 south) because of internal grid bottlenecks, so the energy price differs by zone.",
+    dso: "≈ 170 distribution system operators (regional + municipal). The three largest cover most customers; your depot's grid fee depends on the local DSO.",
+    dsoExamples: ["Ellevio", "E.ON Energidistribution", "Vattenfall Eldistribution", "Göteborg Energi Nät"],
+    marketOperator:
+      "Day-ahead clearing is run by Nord Pool (the main Nordic NEMO; EPEX SPOT also operates), inside European Single Day-Ahead Coupling (SDAC) using the EUPHEMIA algorithm. Svenska kraftnät provides the cross-zonal capacities.",
+    priceZones: "Four zones: SE1, SE2, SE3, SE4 (north to south).",
+    refIds: [11, 12],
+  },
   exampleDepot: {
     contractedPowerKW: 1000,
     annualEnergyKWh: 2_000_000,
@@ -124,6 +135,8 @@ export const sweden: Country = {
     },
   ],
 
+  formulaIntro:
+    "Three independent streams add up to the bill: (1) energy — the electricity itself at the market (spot) price for your SE-zone; (2) grid — a regulated fee to the local DSO, split into a fixed monthly fee, a per-kW 'power charge' on your monthly peak (effektavgift), and a per-kWh delivery charge that is higher on winter weekdays (överföring); (3) tax — energy tax plus VAT. For this depot the power charge alone (≈ 648,000 SEK/yr at Vattenfall N4) is the single largest grid item, so flattening the monthly peak is the main cost lever. Add the streams for the pre-VAT total, then × 1.25 for VAT (which a business reclaims).",
   formulas: [
     { label: "Energy (spot + påslag)", symbolic: "C_energy = E × p_spot", note: "p_spot is SE-zone- and contract-dependent; not modelled as a fixed value." },
     { label: "Grid · fixed", symbolic: "C_fast = 12 × 560 = 6,720 SEK" },
@@ -140,6 +153,17 @@ export const sweden: Country = {
     note: "VAT recoverable if VAT-registered. Grid subtotal alone ≈ 1.36 MSEK/yr; energy stream is zone-dependent on top.",
   },
 
+  costStack: {
+    currency: "SEK",
+    basis: "Vattenfall N4 grid + energiskatt are 2026 values; energy is zone/market-dependent (illustrative).",
+    slices: [
+      { label: "Energy (electricity itself)", category: "energy", amount: 1000000, note: "illustrative ~0.50 SEK/kWh; zone-dependent" },
+      { label: "Energy tax (energiskatt)", category: "tax", amount: 720000 },
+      { label: "Grid – delivery (överföring)", category: "grid-energy", amount: 708800 },
+      { label: "Grid – power (effektavgift)", category: "grid-power", amount: 648000 },
+      { label: "Grid – fixed fee", category: "fixed", amount: 6720 },
+    ],
+  },
   v2g:
     "If the depot exports (bidirectional V2G chargers, on-site solar/battery) it becomes a production/inmatning customer. Vattenfall Eldistribution 2026 company inmatning structure: e.g. mätavgift 270 kr/month (LV), effektersättning höglast ~70 kr/kW·month, energiersättning (nätnytta) ~5.9 öre/kWh for injected energy; exact figures differ by voltage and DSO. The market value of exported energy is sold separately to a supplier at ~spot.\n\nTax credit (skattereduktion för mikroproduktion, the '60-öringen', 60 öre/kWh capped at 30,000 kWh): a 1 MW depot does NOT qualify — its connection far exceeds the ≤100 A limit, AND the credit was abolished from 1 January 2026.\n\nThere is no dedicated official Swedish V2G tariff/tax regime as of mid-2026; a V2G depot is treated under existing producer/inmatning rules. Beyond that: insufficient authoritative data; not modelled.",
 
@@ -167,5 +191,7 @@ export const sweden: Country = {
     { id: 8, title: "Elcertifikatsystemet (kvotnivåer, stoppregel 2035, elintensiv industri)", org: "Energimyndigheten", year: "2026", url: "https://www.energimyndigheten.se/energisystem-och-analys/styrmedel-for-elproduktion/elcertifikatsystemet/", accessed: "2026-06" },
     { id: 9, title: "Ersättning och avgifter för elproduktion — företag 2026 (inmatning, nätnytta)", org: "Vattenfall Eldistribution", year: "2026", url: "https://www.vattenfalleldistribution.se/foretag/abonnemang-och-avgifter/avtal-och-elnatsavgift/elproduktionsersattning-och-avgifter/", accessed: "2026-06" },
     { id: 10, title: "Nätavgifter – elnät (regulated grid tariff statistics)", org: "Energimarknadsinspektionen (Ei)", year: "2026", url: "https://ei.se/om-oss/statistik-och-oppna-data/natavgifter---elnat", accessed: "2026-06" },
+    { id: 11, title: "Svenska kraftnät — Sweden's transmission system operator", org: "Svenska kraftnät", year: "2026", url: "https://www.svk.se/en/", accessed: "2026-06" },
+    { id: 12, title: "Single Day-Ahead Coupling / NEMOs (Nord Pool, EUPHEMIA)", org: "NEMO Committee", year: "2026", url: "https://www.nemo-committee.eu/sdac", accessed: "2026-06" },
   ],
 };

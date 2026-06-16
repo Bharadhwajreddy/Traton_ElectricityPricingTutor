@@ -6,6 +6,9 @@ import { ComponentTable } from "@/components/ComponentTable";
 import { FormulaBlock } from "@/components/FormulaBlock";
 import { ReferenceList } from "@/components/ReferenceList";
 import { Glossary } from "@/components/Glossary";
+import { OperatorsSection } from "@/components/OperatorsSection";
+import { CostStackChart } from "@/components/CostStackChart";
+import { Reveal } from "@/components/Reveal";
 
 export function generateStaticParams() {
   return COUNTRIES.map((c) => ({ code: c.code }));
@@ -18,10 +21,12 @@ export function generateMetadata({ params }: { params: { code: string } }) {
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-20">
-      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
+    <Reveal>
+      <section id={id} className="scroll-mt-20">
+        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <div className="mt-3">{children}</div>
+      </section>
+    </Reveal>
   );
 }
 
@@ -87,26 +92,42 @@ export default function CountryPage({ params }: { params: { code: string } }) {
             </Section>
           )}
 
+          {country.operators && (
+            <Section id="operators" title="B · Who runs the grid & market">
+              <OperatorsSection operators={country.operators} />
+            </Section>
+          )}
+
           {country.components && country.components.length > 0 && (
-            <Section id="components" title="B · Tariff components">
+            <Section id="components" title="C · Tariff components">
               <ComponentTable components={country.components} references={country.references} />
             </Section>
           )}
 
-          {country.formulas && country.formulas.length > 0 && (
-            <Section id="formulas" title="C · Annual cost formulas">
-              <FormulaBlock formulas={country.formulas} total={country.totalFormula} />
+          {(country.formulas?.length || country.costStack) && (
+            <Section id="formulas" title="D · Annual cost — how it adds up">
+              {country.formulaIntro && (
+                <p className="mb-4 text-slate-600">{country.formulaIntro}</p>
+              )}
+              {country.costStack && (
+                <div className="mb-5">
+                  <CostStackChart stack={country.costStack} />
+                </div>
+              )}
+              {country.formulas && country.formulas.length > 0 && (
+                <FormulaBlock formulas={country.formulas} total={country.totalFormula} />
+              )}
             </Section>
           )}
 
           {country.v2g && (
-            <Section id="v2g" title="D · V2G / feed-in / export rules">
+            <Section id="v2g" title="E · V2G / feed-in / export rules">
               <p className="whitespace-pre-line text-slate-600">{country.v2g}</p>
             </Section>
           )}
 
           {country.history && country.history.length > 0 && (
-            <Section id="history" title="E · Notable reforms">
+            <Section id="history" title="F · Notable reforms">
               <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
                 {country.history.map((h, i) => (
                   <li key={i}>{h}</li>
@@ -126,7 +147,7 @@ export default function CountryPage({ params }: { params: { code: string } }) {
           )}
 
           {country.references && country.references.length > 0 && (
-            <Section id="references" title="F · References">
+            <Section id="references" title="G · References">
               <ReferenceList references={country.references} />
             </Section>
           )}

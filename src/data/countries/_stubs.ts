@@ -22,7 +22,6 @@ const EUROPE_STUBS: StubSeed[] = [
   { code: "be", name: "Belgium", flag: "🇧🇪" },
   { code: "at", name: "Austria", flag: "🇦🇹" },
   { code: "ch", name: "Switzerland", flag: "🇨🇭" },
-  { code: "dk", name: "Denmark", flag: "🇩🇰" },
   { code: "no", name: "Norway", flag: "🇳🇴" },
   { code: "fi", name: "Finland", flag: "🇫🇮" },
   { code: "pt", name: "Portugal", flag: "🇵🇹" },

@@ -46,6 +46,36 @@ export interface CostFormula {
   note?: string; // clarifications, period aggregation, unknowns
 }
 
+// One labelled slice of the "anatomy of the bill" animated stack.
+export interface CostSlice {
+  label: string; // e.g. "Grid – power (effektavgift)"
+  category: ComponentCategory;
+  amount?: number; // known annual amount in the country's currency, if modelled
+  share?: number; // 0..1 relative share for the bar when amounts are partial
+  note?: string; // e.g. "market-dependent — illustrative"
+}
+
+export interface CostStack {
+  currency: string; // "EUR", "SEK", "CNY", "DKK"
+  basis: string; // what the numbers represent (regulated part, illustrative total, …)
+  slices: CostSlice[];
+}
+
+// Who operates the grid and the market in a country.
+export interface OperatorEntry {
+  name: string;
+  note?: string; // control area / role / coverage
+}
+export interface Operators {
+  tso: OperatorEntry[]; // transmission system operator(s)
+  tsoNote?: string; // e.g. control-zone map explanation
+  dso: string; // DSO landscape (count + examples), plain text
+  dsoExamples?: string[];
+  marketOperator: string; // who clears the day-ahead market (NEMO / exchange)
+  priceZones?: string; // bidding/price zones
+  refIds?: number[];
+}
+
 export interface ExampleDepot {
   contractedPowerKW: number;
   annualEnergyKWh: number;
@@ -66,10 +96,13 @@ export interface Country {
   // Populated sections (omit for needs-research stubs)
   classification?: string; // how a truck depot is classified in tariff terms
   assumptions?: string[]; // explicit assumptions (esp. deviations from std depot)
+  operators?: Operators; // TSO(s), DSOs, market-clearing operator
   exampleDepot?: ExampleDepot; // per-country depot (may differ from std)
   components?: TariffComponent[];
+  formulaIntro?: string; // plain-English explanation of how the cost adds up
   formulas?: CostFormula[];
   totalFormula?: CostFormula; // total annual cost line
+  costStack?: CostStack; // data for the animated "anatomy of the bill"
   v2g?: string; // V2G / feed-in / export rules (or insufficient-data note)
   history?: string[]; // notable reforms by year
   references?: Reference[];
