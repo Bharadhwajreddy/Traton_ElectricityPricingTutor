@@ -76,6 +76,21 @@ export interface Operators {
   refIds?: number[];
 }
 
+// ---- Decision flowcharts (if/else logic that sets the charge) -------------
+export interface FlowBranch {
+  test: string; // the condition, e.g. "< 2,500 h/year"
+  result: string; // what that branch leads to
+  active?: boolean; // true = the branch the standard depot lands in
+}
+export interface DecisionFlow {
+  title: string; // e.g. "Grid-charge band (§17 StromNEV)"
+  input?: string; // a computed value feeding the decision, e.g. "t_B = E/P_max = 2,000 h"
+  question: string; // the decision node text
+  branches: FlowBranch[];
+  outcome?: string; // resolved result for the standard depot
+  refIds?: number[];
+}
+
 export interface ExampleDepot {
   contractedPowerKW: number;
   annualEnergyKWh: number;
@@ -98,6 +113,7 @@ export interface Country {
   assumptions?: string[]; // explicit assumptions (esp. deviations from std depot)
   operators?: Operators; // TSO(s), DSOs, market-clearing operator
   exampleDepot?: ExampleDepot; // per-country depot (may differ from std)
+  flows?: DecisionFlow[]; // if/else decision logic that determines the charges
   components?: TariffComponent[];
   formulaIntro?: string; // plain-English explanation of how the cost adds up
   formulas?: CostFormula[];

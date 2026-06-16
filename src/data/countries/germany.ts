@@ -14,7 +14,7 @@ export const germany: Country = {
     "Connected at Mittelspannung (medium voltage, ~10–20 kV). Above ~100,000 kWh/yr metering is RLM (registrierende Leistungsmessung, ¼-h load profile), not SLP. As a >30,000 kWh/yr customer with bimonthly peak >30 kW the depot is a Sondervertragskunde for the concession levy (§2 Abs. 7 KAV). Under the EnFG it is end-consumer Group A' for the first 1,000,000 kWh/yr per metering point and Group B' for volume above 1 GWh. It does NOT qualify for §19 Abs. 2 StromNEV intensive-use relief (which needs ≥7,000 h AND ≥10 GWh/yr).",
   assumptions: [
     "Standard depot (1 MW, 2 GWh/yr) at medium voltage, RLM-metered.",
-    "Utilisation t_B = E/P_max = 2,000 h → the <2,500 Benutzungsstunden Netzentgelt regime (high Leistungspreis, low Arbeitspreis).",
+    "Utilisation t_B = E/P_max = 2,000 h → the <2,500 Benutzungsstunden Netzentgelt regime (LOW Leistungspreis €/kW, HIGH Arbeitspreis ct/kWh — so the grid bill scales mainly with energy, not peak).",
     "Stromsteuer §9b reduction assumed NOT applicable: a truck depot is logistics, not 'produzierendes Gewerbe' by default — modelled at the full 2.05 ct/kWh. Verify the WZ-2008 classification.",
     "Energy price and DSO Netzentgelte (LP, AP) are market-/region-specific — only methodology and the <2,500 h regime are fixed; no single euro figure asserted.",
   ],
@@ -41,6 +41,39 @@ export const germany: Country = {
     utilisationHours: 2000,
   },
 
+  flows: [
+    {
+      title: "Grid-charge band (§17 StromNEV)",
+      input: "t_B = E / P_max = 2,000,000 / 1,000 = 2,000 h/year",
+      question: "Is annual utilisation below or at/above 2,500 hours?",
+      branches: [
+        { test: "< 2,500 h", result: "LOW Leistungspreis (€/kW) + HIGH Arbeitspreis (ct/kWh) → grid bill scales with ENERGY used.", active: true },
+        { test: "≥ 2,500 h", result: "HIGH Leistungspreis (€/kW) + LOW Arbeitspreis (ct/kWh) → grid bill scales with PEAK power." },
+      ],
+      outcome: "2,000 h < 2,500 h → the depot uses the low-utilisation price column (peak-shaving helps less than for a high-utilisation site).",
+      refIds: [3],
+    },
+    {
+      title: "Electricity-tax relief (Stromsteuer §9b)",
+      question: "Is the site classified as 'Produzierendes Gewerbe' (manufacturing)?",
+      branches: [
+        { test: "Yes (manufacturing)", result: "§9b relief → effective 0.05 ct/kWh (≈ €1,000/yr)." },
+        { test: "No (logistics/depot)", result: "Full rate 2.05 ct/kWh (≈ €41,000/yr).", active: true },
+      ],
+      outcome: "A truck depot is logistics, not manufacturing → full 2.05 ct/kWh modelled (verify the WZ-2008 code).",
+      refIds: [9],
+    },
+    {
+      title: "Reduced individual network charge (§19 Abs. 2 StromNEV)",
+      question: "Does the site reach ≥ 7,000 utilisation hours AND ≥ 10 GWh/year?",
+      branches: [
+        { test: "Yes (intensive)", result: "May negotiate a reduced individual network charge." },
+        { test: "No", result: "Standard network charge applies.", active: true },
+      ],
+      outcome: "2 GWh and ~2,000 h → does NOT qualify; standard Netzentgelt applies.",
+      refIds: [1],
+    },
+  ],
   components: [
     {
       name: "Energiepreis / Beschaffung (wholesale + supplier margin)",
@@ -55,7 +88,7 @@ export const germany: Country = {
       name: "Netzentgelt – Leistungspreis (grid capacity charge)",
       category: "grid-power",
       basis: "§20 EnWG; §17 StromNEV; DSO Preisblatt",
-      calculation: "€/kW/yr × P_max. Higher rate in the <2,500 h band (which applies to this depot). LP dominates at low utilisation → peak-shaving is the biggest grid-cost lever.",
+      calculation: "€/kW/yr × P_max. LOWER rate in the <2,500 h band (which applies to this depot); higher in the ≥2,500 h band. So for a low-utilisation depot the capacity charge is the smaller of the two grid parts.",
       variesByRegion: "Yes — each DSO publishes its own Preisblatt",
       modelled: false,
       refIds: [3],
@@ -64,7 +97,7 @@ export const germany: Country = {
       name: "Netzentgelt – Arbeitspreis (grid energy charge)",
       category: "grid-energy",
       basis: "§20 EnWG; §17 StromNEV; DSO Preisblatt",
-      calculation: "ct/kWh × E. Lower in the <2,500 h band. Typical MV range ~0.01–6 ct/kWh.",
+      calculation: "ct/kWh × E. HIGHER in the <2,500 h band (which applies to this depot); lower in the ≥2,500 h band. So for a low-utilisation depot the per-kWh grid charge dominates the grid bill. Typical MV range ~0.01–6 ct/kWh.",
       variesByRegion: "Yes — each DSO",
       modelled: false,
       refIds: [3],
@@ -151,10 +184,10 @@ export const germany: Country = {
   ],
 
   formulaIntro:
-    "Read the bill as a stack: you pay (1) for the electricity itself, (2) to have it delivered over the wires, and (3) taxes, levies and surcharges on top. The grid charge has two parts — a per-kW 'power' part tied to your annual peak, and a per-kWh part tied to how much you actually use. Because this depot runs only ~2,000 full-load hours (E ÷ P_max = 2,000,000 ÷ 1,000), it sits in the '<2,500 hours' grid-price band, where the per-kW power part is high — so cutting the peak (P_max) is the single biggest lever on the grid bill. The lines below are each component as its own formula; add them up for the net annual cost, then × 1.19 for VAT (which a business reclaims).",
+    "Read the bill as a stack: you pay (1) for the electricity itself, (2) to have it delivered over the wires, and (3) taxes, levies and surcharges on top. The grid charge has two parts — a per-kW 'power' part tied to your annual peak, and a per-kWh part tied to how much you actually use — and crucially the DSO publishes TWO price columns split at 2,500 utilisation hours/year (t_B = E ÷ P_max). This depot runs ~2,000 h, so it falls in the '<2,500 h' column, where the per-kW power price is LOW and the per-kWh energy price is HIGH. The practical upshot: for this low-utilisation depot the grid bill scales mainly with energy consumed, not with the peak — peak-shaving helps less here than it would for a high-utilisation (≥2,500 h) site. The lines below are each component as its own formula; add them up for the net annual cost, then × 1.19 for VAT (which a business reclaims).",
   formulas: [
     { label: "Energy", symbolic: "C_energy = E × p_energy", note: "Market price; not modelled to a figure." },
-    { label: "Grid (capacity + energy)", symbolic: "C_grid = P_max × LP(regime) + E × AP(regime)", note: "regime = <2500h for this depot (t_B = 2000 h). LP/AP are DSO-specific." },
+    { label: "Grid (capacity + energy)", symbolic: "C_grid = P_max × LP(regime) + E × AP(regime)", note: "regime = <2500h for this depot (t_B = 2000 h) → LOW LP, HIGH AP. LP/AP are DSO-specific." },
     { label: "Electricity tax", symbolic: "C_stromst = E × 0.0205 = €41,000  (or × 0.0005 if §9b applies — not assumed)" },
     { label: "Concession levy", symbolic: "C_konz = E × 0.0011 = €2,200", note: "Subject to KAV Grenzpreis test." },
     { label: "KWKG surcharge", symbolic: "C_KWKG = E₁ × 0.00446 + E₂ × (B'-rate) ≈ €4,460+", note: "E₁ = first 1,000,000 kWh (Group A'), E₂ = volume above 1 GWh (Group B')." },

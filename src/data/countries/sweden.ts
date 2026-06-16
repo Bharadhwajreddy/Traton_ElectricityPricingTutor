@@ -36,6 +36,39 @@ export const sweden: Country = {
     utilisationHours: 2000,
   },
 
+  flows: [
+    {
+      title: "Connection / subscription type",
+      input: "~1 MW connection",
+      question: "Is the main fuse ≤ 63 A, or a larger high-voltage connection?",
+      branches: [
+        { test: "≤ 63 A", result: "Fuse-based säkringsabonnemang (reverted to fuse pricing for small customers in June 2026)." },
+        { test: "> 63 A / ~1 MW", result: "Power-based effektabonnemang at high voltage (Vattenfall N4).", active: true },
+      ],
+      outcome: "A ~1 MW depot is an effektabonnemang HV customer — unaffected by the 2026 small-customer reversion.",
+      refIds: [1, 7],
+    },
+    {
+      title: "Grid delivery rate (överföring) — time & season",
+      question: "Is consumption in höglasttid (winter weekdays 06:00–22:00, Jan–Mar & Nov–Dec)?",
+      branches: [
+        { test: "Yes (höglast)", result: "Higher delivery rate: 61.2 öre/kWh (Vattenfall N4 2026)." },
+        { test: "No (låglast)", result: "Lower delivery rate: 24.4 öre/kWh." },
+      ],
+      outcome: "Mixed in practice; winter-weekday energy costs ~2.5× more to deliver → shift load to låglast.",
+      refIds: [1],
+    },
+    {
+      title: "Industrial energy-tax reduction (energiskatt)",
+      question: "Is the electricity used directly in a manufacturing process (tillverkningsprocessen)?",
+      branches: [
+        { test: "Yes (industri)", result: "Reduced rate 0.6 öre/kWh." },
+        { test: "No (logistics/depot)", result: "Full rate 36.0 öre/kWh.", active: true },
+      ],
+      outcome: "A truck depot is transport/logistics → pays the full 36.0 öre/kWh.",
+      refIds: [2],
+    },
+  ],
   components: [
     {
       name: "Spotpris / elhandelspris (energy price)",

@@ -37,6 +37,39 @@ export const denmark: Country = {
     refIds: [7, 8],
   },
 
+  flows: [
+    {
+      title: "DSO time-of-day band (Radius Tariffmodel 3.0)",
+      question: "When is the energy consumed? (winter rates are highest)",
+      branches: [
+        { test: "Lavlast 00–06", result: "Lowest øre/kWh delivery rate." },
+        { test: "Højlast 06–17 & 21–24", result: "Medium delivery rate." },
+        { test: "Spidslast 17–21", result: "Highest delivery rate (esp. winter)." },
+      ],
+      outcome: "Charging overnight (lavlast) minimises the DSO part of the bill.",
+      refIds: [3],
+    },
+    {
+      title: "Electricity-tax refund (elafgift / godtgørelse)",
+      question: "Is this a VAT-registered business consuming process electricity?",
+      branches: [
+        { test: "Yes (business)", result: "elafgift refunded toward the EU minimum (godtgørelse).", active: true },
+        { test: "No (household)", result: "Pays the full electricity tax." },
+      ],
+      outcome: "A depot operator is a VAT-registered business → near-zero net electricity tax (also at EU minimum in 2026).",
+      refIds: [4],
+    },
+    {
+      title: "Transmission grid tariff (Energinet)",
+      question: "Is the site a large consumer with limited grid access?",
+      branches: [
+        { test: "Yes (limited access)", result: "Reduced transmission nettarif: 19,729 kr/MW/year (2026)." },
+        { test: "Standard", result: "Volumetric nettarif 4.3 øre/kWh + 7.2 øre/kWh systemtarif.", active: true },
+      ],
+      outcome: "A standard ~1 MW DSO-connected depot pays the volumetric 11.5 øre/kWh Energinet tariff.",
+      refIds: [2],
+    },
+  ],
   components: [
     {
       name: "Spotpris (energy price)",

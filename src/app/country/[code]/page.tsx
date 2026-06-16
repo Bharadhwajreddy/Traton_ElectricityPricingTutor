@@ -8,6 +8,7 @@ import { ReferenceList } from "@/components/ReferenceList";
 import { Glossary } from "@/components/Glossary";
 import { OperatorsSection } from "@/components/OperatorsSection";
 import { CostStackChart } from "@/components/CostStackChart";
+import { DecisionFlowChart } from "@/components/DecisionFlowChart";
 import { Reveal } from "@/components/Reveal";
 
 export function generateStaticParams() {
@@ -98,14 +99,29 @@ export default function CountryPage({ params }: { params: { code: string } }) {
             </Section>
           )}
 
+          {country.flows && country.flows.length > 0 && (
+            <Section id="logic" title="C · Decision logic — what sets your charges">
+              <p className="mb-4 text-sm text-slate-500">
+                These flowcharts show the if/else rules that decide which tariff a depot pays. The
+                green branch marked “this depot” is the path the standard 1 MW / 2 GWh example lands
+                in.
+              </p>
+              <div className="space-y-4">
+                {country.flows.map((f, i) => (
+                  <DecisionFlowChart key={i} flow={f} />
+                ))}
+              </div>
+            </Section>
+          )}
+
           {country.components && country.components.length > 0 && (
-            <Section id="components" title="C · Tariff components">
+            <Section id="components" title="D · Tariff components">
               <ComponentTable components={country.components} references={country.references} />
             </Section>
           )}
 
           {(country.formulas?.length || country.costStack) && (
-            <Section id="formulas" title="D · Annual cost — how it adds up">
+            <Section id="formulas" title="E · Annual cost — how it adds up">
               {country.formulaIntro && (
                 <p className="mb-4 text-slate-600">{country.formulaIntro}</p>
               )}
@@ -121,13 +137,13 @@ export default function CountryPage({ params }: { params: { code: string } }) {
           )}
 
           {country.v2g && (
-            <Section id="v2g" title="E · V2G / feed-in / export rules">
+            <Section id="v2g" title="F · V2G / feed-in / export rules">
               <p className="whitespace-pre-line text-slate-600">{country.v2g}</p>
             </Section>
           )}
 
           {country.history && country.history.length > 0 && (
-            <Section id="history" title="F · Notable reforms">
+            <Section id="history" title="G · Notable reforms">
               <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
                 {country.history.map((h, i) => (
                   <li key={i}>{h}</li>
@@ -147,7 +163,7 @@ export default function CountryPage({ params }: { params: { code: string } }) {
           )}
 
           {country.references && country.references.length > 0 && (
-            <Section id="references" title="G · References">
+            <Section id="references" title="H · References">
               <ReferenceList references={country.references} />
             </Section>
           )}

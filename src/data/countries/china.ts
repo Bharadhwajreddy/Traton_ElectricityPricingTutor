@@ -40,6 +40,41 @@ export const china: Country = {
     utilisationHours: 2000,
   },
 
+  flows: [
+    {
+      title: "Single-part vs two-part tariff (by contracted capacity)",
+      input: "~1,000 kVA transformer at 10 kV",
+      question: "What is the contracted capacity?",
+      branches: [
+        { test: "≤ 100 kVA", result: "Single-part (单一制): energy charge only." },
+        { test: "100–315 kVA", result: "User may choose single- or two-part." },
+        { test: "≥ 315 kVA", result: "Two-part (两部制) mandatory: energy + demand charge.", active: true },
+      ],
+      outcome: "1,000 kVA ≥ 315 kVA → two-part tariff is mandatory.",
+      refIds: [2, 5],
+    },
+    {
+      title: "Demand-charge basis (under two-part)",
+      question: "Bill the demand charge by transformer size or by measured peak?",
+      branches: [
+        { test: "Capacity (容量, 元/kVA)", result: "1,000 × 32 × 12 = 384,000 元/yr — fixed on transformer size." },
+        { test: "Max-demand (需量, 元/kW)", result: "P_max × 51.2 × 12 (×0.9 if monthly kWh/kVA ≥ 260)." },
+      ],
+      outcome: "User picks whichever is cheaper for the load profile; capacity basis suits steady high use, max-demand suits low/peaky use.",
+      refIds: [3],
+    },
+    {
+      title: "Time-of-use energy price (峰/平/谷, Jiangsu 10 kV)",
+      question: "What time of day is the energy used?",
+      branches: [
+        { test: "峰 Peak", result: "0.9149 元/kWh (≈ +80% on base)." },
+        { test: "平 Flat", result: "0.6177 元/kWh (base)." },
+        { test: "谷 Valley", result: "0.3762 元/kWh (≈ −65% on base).", active: true },
+      ],
+      outcome: "Valley price is ~⅓ of peak → shifting charging to the overnight valley is the biggest energy-cost lever.",
+      refIds: [4],
+    },
+  ],
   components: [
     {
       name: "代理购电价格 (agent-purchase energy price)",
